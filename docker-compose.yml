@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  # --- Service 1: Database ---
+  postgres:
+    image: postgres:15-alpine
+    container_name: cinema_db # Nama container
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: root # Username DB
+      POSTGRES_PASSWORD: root # Password DB
+      POSTGRES_DB: cinema_db # Nama Database otomatis dibuat
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # --- Service 2: Redis ---
+  redis:
+    image: redis:7-alpine
+    container_name: cinema_redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:

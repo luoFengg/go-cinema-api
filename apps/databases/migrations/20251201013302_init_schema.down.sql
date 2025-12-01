@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS "showtimes";
+DROP TABLE IF EXISTS "seats";
+DROP TABLE IF EXISTS "movies";
+DROP TABLE IF EXISTS "studios";
