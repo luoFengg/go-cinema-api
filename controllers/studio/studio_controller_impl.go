@@ -43,3 +43,19 @@ func (controller *StudioControllerImpl) CreateStudio(ctx *gin.Context) {
 	})
 
 }
+
+func (controller *StudioControllerImpl) GetStudioByID(ctx *gin.Context) {
+	studioID := ctx.Param("studioID")
+
+	studio, err := controller.studioService.GetStudioByID(ctx.Request.Context(), studioID)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, web.WebResponse{
+		Success: true,
+		Message: "Studio retrieved successfully",
+		Data:    studio,
+	})
+}

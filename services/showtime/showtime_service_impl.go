@@ -66,3 +66,11 @@ func (s *ShowtimeServiceImpl) CreateShowtime(ctx context.Context, request web.Sh
 	}
 	return nil
 }
+
+func (s *ShowtimeServiceImpl) GetShowtimeList(ctx context.Context) ([]domain.Showtime, error) {
+	showtimes, err := s.showtimeRepo.GetAllShowtimes(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return showtimes, nil
+}

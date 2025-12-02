@@ -8,4 +8,5 @@ import (
 
 type MovieService interface {
 	CreateMovie(ctx context.Context, request web.MovieCreateRequest) (*domain.Movie, error)
+	GetMovies(ctx context.Context) ([]domain.Movie, error)
 }

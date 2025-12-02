@@ -30,3 +30,11 @@ func (service *MovieServiceImpl) CreateMovie(ctx context.Context, request web.Mo
 	}
 	return newMovie, nil
 }
+
+func (service *MovieServiceImpl) GetMovies(ctx context.Context) ([]domain.Movie, error) {
+	movies, err := service.movieRepo.GetAllMovies(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return movies, nil
+}

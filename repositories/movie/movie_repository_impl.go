@@ -33,3 +33,12 @@ func (repo *MovieRepositoryImpl) GetMovieByID(ctx context.Context, id string) (*
 	}
 	return &movie, nil
 }
+
+func (repo *MovieRepositoryImpl) GetAllMovies(ctx context.Context) ([]domain.Movie, error) {
+	var movies []domain.Movie
+	err := repo.DB.WithContext(ctx).Find(&movies).Error
+	if err != nil {
+		return nil, err
+	}
+	return movies, nil
+}

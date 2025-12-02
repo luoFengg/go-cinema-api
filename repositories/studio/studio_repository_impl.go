@@ -30,3 +30,14 @@ func (repo *StudioRepositoryImpl) CreateStudioWithSeats(ctx context.Context, stu
 	})
 
 }
+
+func (repo *StudioRepositoryImpl) GetStudioByID(ctx context.Context, studioID string) (*domain.Studio, error) {
+	var studio domain.Studio
+
+	err := repo.DB.WithContext(ctx).Preload("Seats").First(&studio, "id = ?", studioID).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &studio, nil
+}

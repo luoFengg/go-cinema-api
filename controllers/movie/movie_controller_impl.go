@@ -43,3 +43,17 @@ func (controller *MovieControllerImpl) CreateMovie(ctx *gin.Context) {
 		Data:    movie,
 	})
 }
+
+func (controller *MovieControllerImpl) GetAllMovies(ctx *gin.Context) {
+	movies, err := controller.movieService.GetMovies(ctx.Request.Context())
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+	
+	ctx.JSON(200, web.WebResponse{
+		Success: true,
+		Message: "Movies retrieved successfully",
+		Data:    movies,
+	})
+}

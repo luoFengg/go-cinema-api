@@ -42,5 +42,18 @@ func (controller *ShowtimeControllerImpl) CreateShowtime(ctx *gin.Context) {
 		Message: "Showtime created successfully",
 		Data:    showtime,
 	})
+}
 
+func (controller *ShowtimeControllerImpl) GetShowtimeList(ctx *gin.Context) {
+	showtimes, err := controller.showtimeService.GetShowtimeList(ctx.Request.Context())
+	if err != nil {
+		ctx.Error(err)
+		return
+	}	
+
+	ctx.JSON(http.StatusOK, web.WebResponse{
+		Success: true,
+		Message: "Showtimes retrieved successfully",
+		Data:    showtimes,
+	})
 }

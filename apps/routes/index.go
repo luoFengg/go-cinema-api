@@ -18,14 +18,16 @@ func NewRouter(studioController studioController.StudioController, movieControll
 	// Studio Routes
 	studioGroup := router.Group("v1/studios")
 	studioGroup.POST("/", studioController.CreateStudio)
+	studioGroup.GET("/:studioID", studioController.GetStudioByID)
 	
 	// Movie Routes
 	movieGroup := router.Group("v1/movies")
 	movieGroup.POST("/", movieController.CreateMovie)
+	movieGroup.GET("/", movieController.GetAllMovies)
 
 	// Showtime Routes
 	showtimeGroup := router.Group("v1/showtimes")
 	showtimeGroup.POST("/", showtimeController.CreateShowtime)
-
+	showtimeGroup.GET("/", showtimeController.GetShowtimeList)
 	return router
 }

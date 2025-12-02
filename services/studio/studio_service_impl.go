@@ -71,3 +71,11 @@ func (service *StudioServiceImpl) CreateStudio(ctx context.Context, name string,
 	}
 	return nil
 }
+
+func (service *StudioServiceImpl) GetStudioByID(ctx context.Context, studioID string) (*domain.Studio, error) {
+	studio, err := service.repo.GetStudioByID(ctx, studioID)
+	if err != nil {
+		return nil, err
+	}
+	return studio, nil
+}

@@ -42,3 +42,12 @@ func (repo *ShowtimeRepositoryImpl) CheckOverlappingShowtime(ctx context.Context
 	}
 	return count > 0, nil
 }
+
+func (repo *ShowtimeRepositoryImpl) GetAllShowtimes(ctx context.Context) ([]domain.Showtime, error) {
+	var showtimes []domain.Showtime
+	err := repo.DB.WithContext(ctx).Preload("Movie").Preload("Studio").Find(&showtimes).Error
+	if err != nil {
+		return nil, err
+	}
+	return showtimes, nil
+}

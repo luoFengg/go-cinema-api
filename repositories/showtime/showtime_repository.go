@@ -9,4 +9,5 @@ import (
 type ShowtimeRepository interface {
 	CreateShowtime(ctx context.Context, showtime *domain.Showtime) error
 	CheckOverlappingShowtime(ctx context.Context, request web.CheckOverlappingShowtimeCreateRequest) (bool, error)
+	GetAllShowtimes(ctx context.Context) ([]domain.Showtime, error)
 }
