@@ -37,7 +37,7 @@ func (controller *MovieControllerImpl) CreateMovie(ctx *gin.Context) {
 		return
 	}
 	
-	ctx.JSON(200, web.WebResponse{
+	ctx.JSON(http.StatusCreated, web.WebResponse{
 		Success: true,
 		Message: "Movie created successfully",
 		Data:    movie,
@@ -51,7 +51,7 @@ func (controller *MovieControllerImpl) GetAllMovies(ctx *gin.Context) {
 		return
 	}
 	
-	ctx.JSON(200, web.WebResponse{
+	ctx.JSON(http.StatusOK, web.WebResponse{
 		Success: true,
 		Message: "Movies retrieved successfully",
 		Data:    movies,

@@ -37,7 +37,7 @@ func (controller *ShowtimeControllerImpl) CreateShowtime(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, web.WebResponse{
+	ctx.JSON(http.StatusCreated, web.WebResponse{
 		Success: true,
 		Message: "Showtime created successfully",
 		Data:    showtime,

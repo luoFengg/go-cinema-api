@@ -36,7 +36,7 @@ func (controller *StudioControllerImpl) CreateStudio(ctx *gin.Context) {
 		ctx.Error(err)
 	}
 
-	ctx.JSON (http.StatusOK, web.WebResponse{
+	ctx.JSON (http.StatusCreated, web.WebResponse{
 		Success: true,
 		Message: "Studio created successfully",
 		Data:    requset,
