@@ -51,3 +51,13 @@ func (repo *ShowtimeRepositoryImpl) GetAllShowtimes(ctx context.Context) ([]doma
 	}
 	return showtimes, nil
 }
+
+func (repo *ShowtimeRepositoryImpl) GetShowtimeByID(ctx context.Context, showtimeID string) (domain.Showtime, error) {
+	var showtime domain.Showtime
+
+	err := repo.DB.WithContext(ctx).Preload("Movie").Preload("Studio").First(&showtime, "id = ?", showtimeID).Error
+	if err != nil {
+		return domain.Showtime{}, err
+	}
+	return showtime, nil
+}

@@ -23,6 +23,10 @@ import (
 	authRepository "go-cinema-api/repositories/user"
 	authService "go-cinema-api/services/auth"
 
+	bookingController "go-cinema-api/controllers/booking"
+	bookingRepository "go-cinema-api/repositories/booking"
+	bookingService "go-cinema-api/services/booking"
+
 	"github.com/joho/godotenv"
 )
 
@@ -56,13 +60,18 @@ func main() {
 	showtimeService := showtimeService.NewShowtimeService(showtimeRepository, MovieRepository)
 	showtimeController := showtimeController.NewShowtimeController(showtimeService)
 
+	// Booking
+	bookingRepository := bookingRepository.NewBookingRepository(db)
+	bookingService := bookingService.NewBookingService(bookingRepository, showtimeRepository, db)
+	bookingController := bookingController.NewBookingController(bookingService)
+
 	// Auth
 	authRepository := authRepository.NewUserRepository(db)
 	authService := authService.NewAuthService(authRepository)
 	authController := authController.NewAuthController(authService)
 
 	// 4. Set up the router
-	router := routes.NewRouter(studioController, movieController, showtimeController, authController)
+	router := routes.NewRouter(studioController, movieController, showtimeController, authController, bookingController)
 
 	// 5. Start the server
 	address := fmt.Sprintf("%s:%s", os.Getenv("SERVER_HOST"), os.Getenv("SERVER_PORT"))

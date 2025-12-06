@@ -74,3 +74,11 @@ func (s *ShowtimeServiceImpl) GetShowtimeList(ctx context.Context) ([]domain.Sho
 	}
 	return showtimes, nil
 }
+
+func (s *ShowtimeServiceImpl) GetShowtimeByID(ctx context.Context, showtimeID string) (domain.Showtime, error) {
+	showtime, err := s.showtimeRepo.GetShowtimeByID(ctx, showtimeID)
+	if err != nil {
+		return domain.Showtime{}, err
+	}
+	return showtime, nil
+}

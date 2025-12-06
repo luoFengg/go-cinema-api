@@ -1,4 +1,4 @@
-CREATE TABLE "users" (
+CREATE TABLE users (
   id VARCHAR(100) PRIMARY KEY,
   
   username VARCHAR(30) UNIQUE NOT NULL,

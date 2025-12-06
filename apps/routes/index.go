@@ -2,6 +2,7 @@ package routes
 
 import (
 	authController "go-cinema-api/controllers/auth"
+	bookingController "go-cinema-api/controllers/booking"
 	movieController "go-cinema-api/controllers/movie"
 	showtimeController "go-cinema-api/controllers/showtime"
 	studioController "go-cinema-api/controllers/studio"
@@ -11,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func NewRouter(studioController studioController.StudioController, movieController movieController.MovieController, showtimeController showtimeController.ShowtimeController, authController authController.AuthController) *gin.Engine {
+func NewRouter(studioController studioController.StudioController, movieController movieController.MovieController, showtimeController showtimeController.ShowtimeController, authController authController.AuthController, bookingController bookingController.BookingController) *gin.Engine {
 	router := gin.Default()
 
 	// Add error handler middleware
@@ -34,21 +35,28 @@ func NewRouter(studioController studioController.StudioController, movieControll
 	authGroup.POST("/register", authController.RegisterUser)
 	authGroup.POST("/login", authController.LoginUser)
 
-	// --- RUTE DIPROTEKSI (Harus Login / Bawa Token) ---
+	// --- PROTECTED ROUTES ---
+	// Booking Routes
+	bookingGroup := router.Group("v1/bookings")
+	bookingGroup.Use(middleware.AuthMiddleware())
+	bookingGroup.POST("/", bookingController.CreateBooking)
+	bookingGroup.GET("/", bookingController.GetBookingHistory)
+
+	// --- ADMIN ROUTE  ---
 	// Admin Only (Movie)
-	adminMovie := movieGroup.Group("")
+	adminMovie := movieGroup.Group("/")
 	adminMovie.Use(middleware.AuthMiddleware(), middleware.AdminOnlyMiddleware())
-	adminMovie.POST("", movieController.CreateMovie)
+	adminMovie.POST("/", movieController.CreateMovie)
 
 	// Admin Only (Showtime)
 	adminShowtime := showtimeGroup.Group("")
 	adminShowtime.Use(middleware.AuthMiddleware(), middleware.AdminOnlyMiddleware())
-	adminShowtime.POST("", showtimeController.CreateShowtime)
+	adminShowtime.POST("/", showtimeController.CreateShowtime)
 
 	// Admin Only (Studio)
-	adminStudio := studioGroup.Group("")
+	adminStudio := studioGroup.Group("/")
 	adminStudio.Use(middleware.AuthMiddleware(), middleware.AdminOnlyMiddleware())
-	adminStudio.POST("", studioController.CreateStudio)
+	adminStudio.POST("/", studioController.CreateStudio)
 
 
 	return router
