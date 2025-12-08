@@ -52,7 +52,7 @@ func (repo *BookingRepositoryImpl) CheckSeatsAvailability(ctx context.Context, t
 	Joins("JOIN bookings ON bookings.id = booking_seats.booking_id").
 	Where("bookings.showtime_id = ?", showtimeID).
 	Where("booking_seats.seat_id IN ?", seatIDs).
-	Where("bookings.status IN ?", []string{"pending", "confirmed"}).
+	Where("bookings.status IN ?", []string{"pending", "paid"}).
 	Count(&count).Error
 
 	if err != nil {
@@ -72,13 +72,44 @@ func (repo *BookingRepositoryImpl) LockSeats(tx *gorm.DB, seatIDs []string) erro
 	return nil
 }
 
-func (repo *BookingRepositoryImpl) UpdateSeatsAvailability(ctx context.Context, tx *gorm.DB, seatIDs []string, isAvailable bool) error {
-	var dbExecutor *gorm.DB
+func (repo *BookingRepositoryImpl) GetBookedSeatIDsForShowtime(ctx context.Context, showtimeID string) ([]string, error) {
+	var seatIDs []string
+
+	err := repo.DB.WithContext(ctx).Table("booking_seats").
+	Joins("JOIN bookings ON bookings.id = booking_seats.booking_id").
+	Where("bookings.showtime_id = ?", showtimeID).
+	Where("bookings.status IN ?", []string{"pending", "paid"}).
+	Pluck("booking_seats.seat_id", &seatIDs).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return seatIDs, nil
+}
+
+func (repo *BookingRepositoryImpl) UpdatePaymentInfo(ctx context.Context, tx *gorm.DB, bookingID string, paymentURL string, payemntToken string) error {
+	dbExecutor := repo.DB
 	if tx != nil {
 		dbExecutor = tx
 	}
 
-	err := dbExecutor.WithContext(ctx).Model(&domain.Seat{}).Where("id IN ?", seatIDs).
-	Update("is_available", isAvailable).Error
+	err := dbExecutor.WithContext(ctx).Model(&domain.Booking{}).
+		Where("id = ?", bookingID).
+		Updates(map[string]interface{}{
+			"payment_url": paymentURL,
+			"payment_token": payemntToken,
+		}).Error
+
 	return err
+}
+
+func (repo *BookingRepositoryImpl) UpdateBookingStatus(ctx context.Context, tx *gorm.DB, bookingID string, status string) error {
+	dbExecutor := repo.DB
+	if tx != nil {
+		dbExecutor = tx
+	}
+
+	return dbExecutor.WithContext(ctx).Model(&domain.Booking{}).
+		Where("id = ?", bookingID).
+		Update("status", status).Error
 }

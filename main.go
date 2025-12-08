@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go-cinema-api/apps/databases"
 	"go-cinema-api/apps/routes"
+	"go-cinema-api/utils"
 	"log"
 	"os"
 
@@ -27,6 +28,9 @@ import (
 	bookingRepository "go-cinema-api/repositories/booking"
 	bookingService "go-cinema-api/services/booking"
 
+	paymentController "go-cinema-api/controllers/payment"
+	paymentService "go-cinema-api/services/payment"
+
 	"github.com/joho/godotenv"
 )
 
@@ -43,7 +47,10 @@ func main() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	// 3. Initialize repository, service, and controller
+	// 3. Initialize Midtrans
+	utils.InitMidtrans()
+
+	// 4. Initialize repository, service, and controller
 
 	// Studio
 	studioRepository := studioRepository.NewStudioRepository(db)
@@ -51,17 +58,18 @@ func main() {
 	studioController := studioController.NewStudioController(studioService)
 	
 	// Movie
-	MovieRepository := movieRepository.NewMovieRepository(db)
-	movieService := movieService.NewMovieService(MovieRepository)
+	movieRepository := movieRepository.NewMovieRepository(db)
+	movieService := movieService.NewMovieService(movieRepository)
 	movieController := movieController.NewMovieController(movieService)
 
 	// Showtime
 	showtimeRepository := showtimeRepository.NewShowtimeRepository(db)
-	showtimeService := showtimeService.NewShowtimeService(showtimeRepository, MovieRepository)
+	// Booking repository is needed by showtime service, initialize it first
+	bookingRepository := bookingRepository.NewBookingRepository(db)
+	showtimeService := showtimeService.NewShowtimeService(showtimeRepository, movieRepository, studioRepository, bookingRepository)
 	showtimeController := showtimeController.NewShowtimeController(showtimeService)
 
 	// Booking
-	bookingRepository := bookingRepository.NewBookingRepository(db)
 	bookingService := bookingService.NewBookingService(bookingRepository, showtimeRepository, db)
 	bookingController := bookingController.NewBookingController(bookingService)
 
@@ -70,10 +78,14 @@ func main() {
 	authService := authService.NewAuthService(authRepository)
 	authController := authController.NewAuthController(authService)
 
-	// 4. Set up the router
-	router := routes.NewRouter(studioController, movieController, showtimeController, authController, bookingController)
+	// Payment
+	paymentService := paymentService.NewPaymentService(bookingRepository, db)
+	paymentController := paymentController.NewPaymentController(paymentService)
 
-	// 5. Start the server
+	// 5. Set up the router
+	router := routes.NewRouter(studioController, movieController, showtimeController, authController, bookingController, paymentController)
+
+	// 6. Start the server
 	address := fmt.Sprintf("%s:%s", os.Getenv("SERVER_HOST"), os.Getenv("SERVER_PORT"))
 
 	err = router.Run(address)

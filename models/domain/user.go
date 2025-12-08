@@ -9,10 +9,14 @@ import (
 
 type User struct {
 	ID        string    `json:"id" gorm:"primaryKey;column:id"`
+	
 	Username  string    `json:"username" gorm:"column:username;type:varchar(30);unique;not null;"`
 	Email     string    `json:"email" gorm:"column:email;type:varchar(255);unique;not null"`
+	FirstName string    `json:"first_name" gorm:"column:first_name;type:varchar(100)"`
+	LastName  string    `json:"last_name" gorm:"column:last_name;type:varchar(100)"`
 	Password  string    `json:"-" gorm:"column:password;type:varchar(255);not null"`
 	Role      string    `json:"role" gorm:"column:role;type:varchar(50);not null;default:'customer'"`
+	
 	CreatedAt time.Time `json:"created_at" gorm:"column:created_at;not null;autoCreateTime"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"column:updated_at;not null;autoCreateTime;autoUpdateTime"`
 }

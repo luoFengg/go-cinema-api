@@ -6,20 +6,26 @@ import (
 	"go-cinema-api/exceptions"
 	"go-cinema-api/models/domain"
 	"go-cinema-api/models/web"
+	bookingRepo "go-cinema-api/repositories/booking"
 	movieRepo "go-cinema-api/repositories/movie"
 	showtimeRepo "go-cinema-api/repositories/showtime"
+	studioRepo "go-cinema-api/repositories/studio"
 	"time"
 )
 
 type ShowtimeServiceImpl struct {
 	showtimeRepo showtimeRepo.ShowtimeRepository
 	movieRepo movieRepo.MovieRepository
+	studioRepo studioRepo.StudioRepository
+	bookingRepo bookingRepo.BookingRepository
 }
 
-func NewShowtimeService(showtimeRepo showtimeRepo.ShowtimeRepository, movieRepo movieRepo.MovieRepository) ShowtimeService {
+func NewShowtimeService(showtimeRepo showtimeRepo.ShowtimeRepository, movieRepo movieRepo.MovieRepository, studioRepo studioRepo.StudioRepository, bookingRepo bookingRepo.BookingRepository) ShowtimeService {
 	return &ShowtimeServiceImpl{
 		showtimeRepo: showtimeRepo,
 		movieRepo: movieRepo,
+		studioRepo: studioRepo,
+		bookingRepo: bookingRepo,
 	}
 }
 
@@ -81,4 +87,50 @@ func (s *ShowtimeServiceImpl) GetShowtimeByID(ctx context.Context, showtimeID st
 		return domain.Showtime{}, err
 	}
 	return showtime, nil
+}
+
+func (s *ShowtimeServiceImpl) GetSeatMapForShowtime(ctx context.Context, showtimeID string) ([]web.SeatWithStatus, error) {
+	// 1. Ambil shotime (dengan studio_id)
+	showtime, err := s.showtimeRepo.GetShowtimeByID(ctx, showtimeID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. Ambil studio + seats
+	studio, err := s.studioRepo.GetStudioByID(ctx, showtime.StudioID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. Ambil daftar seat_id yang sudah dibooking di showtime ini
+	bookedSeatIDs, err := s.bookingRepo.GetBookedSeatIDsForShowtime(ctx, showtimeID)
+	if err != nil {
+		return nil, err
+	}
+	
+	bookedSet := map[string]struct{}{}
+	for _, seatID := range bookedSeatIDs {
+		bookedSet[seatID] = struct{}{}
+	}
+
+	// 4. Gabungkan data studio + bookedSeatIDs jadi SeatWithStatus
+	var result []web.SeatWithStatus
+	for _, seat := range studio.Seats {
+		status := "available"
+		if !seat.IsAvailable {
+			status = "maintenance"
+		} else {
+			if _, ok := bookedSet[seat.ID]; ok {
+				status = "booked"
+			}
+		}
+		result = append(result, web.SeatWithStatus{
+			ID:          seat.ID,
+			Row:         seat.Row,
+			Number:      seat.Number,
+			IsAvailable: seat.IsAvailable,
+			Status:      status,
+		})
+	}
+	return result, nil
 }

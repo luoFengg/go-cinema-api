@@ -57,3 +57,34 @@ func (controller *ShowtimeControllerImpl) GetShowtimeList(ctx *gin.Context) {
 		Data:    showtimes,
 	})
 }
+
+func (controller *ShowtimeControllerImpl) GetSeatMap(ctx *gin.Context) {
+	// 1. Ambil showtimeID dari parameter URL
+	showtimeID := ctx.Param("showtimeID")
+
+	// 2. Ambil seat list 
+	seats, err := controller.showtimeService.GetSeatMapForShowtime(ctx.Request.Context(), showtimeID)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	// 3. Ambil showtime untuk dapetin studio_id
+	showtime, err := controller.showtimeService.GetShowtimeByID(ctx.Request.Context(), showtimeID)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	response := web.SeatMapResponse{
+		ShowtimeID: showtimeID,
+		StudioID:   showtime.StudioID,
+		Seats:      seats,
+	}
+
+	ctx.JSON(http.StatusOK, web.WebResponse{
+		Success: true,
+		Message: "Seat map retrieved successfully",
+		Data:    response,
+	})
+}

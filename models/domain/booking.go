@@ -9,10 +9,14 @@ import (
 
 type Booking struct {
 	ID         string  `gorm:"primaryKey;type:varchar(100)" json:"id"`
+	
 	UserID     string  `gorm:"type:varchar(100);not null" json:"user_id"`
 	ShowtimeID string  `gorm:"type:varchar(100);not null" json:"showtime_id"`
 	TotalPrice float64 `gorm:"type:decimal(10,2);not null" json:"total_price"`
 	Status     string  `gorm:"type:varchar(50);not null;default:'pending'" json:"status"`
+	PaymentURL string `gorm:"type:text" json:"payment_url,omitempty"`
+	PaymentToken string `gorm:"type:varchar(255)" json:"payment_token,omitempty"`
+	
 	CreatedAt  time.Time  `gorm:"type:timestamptz;not null;autoCreateTime" json:"created_at"`
 	UpdatedAt  time.Time  `gorm:"type:timestamptz;not null;autoCreateTime;autoUpdateTime" json:"updated_at"`
 

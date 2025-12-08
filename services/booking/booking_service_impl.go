@@ -7,7 +7,10 @@ import (
 	"go-cinema-api/models/web"
 	repositories "go-cinema-api/repositories/booking"
 	showtimeRepository "go-cinema-api/repositories/showtime"
+	"go-cinema-api/utils"
 
+	"github.com/midtrans/midtrans-go"
+	"github.com/midtrans/midtrans-go/snap"
 	"gorm.io/gorm"
 )
 
@@ -37,7 +40,7 @@ func (service *BookingServiceImpl) CreateBooking(ctx context.Context, userID str
 
 		// ---------------------------------------------------------
         // TAHAP 1: LOCKING (Pessimistic Lock) - SOLUSI RACE CONDITION
-        // Kita "pegang" dulu kursi fisiknya di tabel master seats.
+        // Lock dulu kursi fisiknya di tabel master seats.
         // Jika ada orang lain yang mau booking kursi ini di detik yang sama,
         // database akan memaksa mereka menunggu di baris ini sampai kita selesai.
         // ---------------------------------------------------------
@@ -50,12 +53,13 @@ func (service *BookingServiceImpl) CreateBooking(ctx context.Context, userID str
         // TAHAP 2: VALIDASI LOGIC (Check Availability)
         // Setelah kita kunci, baru kita cek: "Ada ngga sih bookingan aktif di kursi ini?"
         // ---------------------------------------------------------
-		isAvailable, err := service.bookingRepo.CheckSeatsAvailability(ctx, tx, request.ShowtimeID, request.SeatIDs)
+		isBooked, err := service.bookingRepo.CheckSeatsAvailability(ctx, tx, request.ShowtimeID, request.SeatIDs)
 		if err != nil {
 			return err
 		}
-		if isAvailable {
-			return exceptions.NewBadRequestError("one or more seats are already booked")
+		
+		if isBooked {
+			return exceptions.NewConflictError("one or more seats are already booked")
 		}
 
 		// 3. Ambil Harga & Logic Booking
@@ -89,11 +93,6 @@ func (service *BookingServiceImpl) CreateBooking(ctx context.Context, userID str
 			return errBooking
 		}
 
-		errUpdateSeats := service.bookingRepo.UpdateSeatsAvailability(ctx, tx, request.SeatIDs, false)
-		if errUpdateSeats != nil {
-			return errUpdateSeats
-		}
-
 		return nil
 	})
 
@@ -113,6 +112,46 @@ func (service *BookingServiceImpl) CreateBooking(ctx context.Context, userID str
 	if err != nil {
 		return nil, err
 	}
+
+	// ==========================================
+    // REQUEST KE MIDTRANS (SNAP)
+    // ==========================================
+
+	snapReq := &snap.Request{
+		TransactionDetails: midtrans.TransactionDetails{
+			OrderID:  savedBooking.ID,
+			GrossAmt: int64(savedBooking.TotalPrice),
+		},
+		CreditCard: &snap.CreditCardDetails{
+			Secure: true,
+		},
+		CustomerDetail: &midtrans.CustomerDetails{
+			FName: savedBooking.User.FirstName,
+			LName: savedBooking.User.LastName,
+			Email: savedBooking.User.Email,
+		},
+		Expiry: &snap.ExpiryDetails{
+			Unit:  "minutes",
+			Duration: 5,
+		},
+
+	}
+
+	// Panggil API Midtrans Snap untuk bikin transaksi using initialized client
+	snapResp, errSnap := utils.SnapClient.CreateTransaction(snapReq)
+	if errSnap != nil {
+		return nil, errSnap
+	}
+
+	// Simpan payment_url & payment_token ke tabel bookings
+	err = service.bookingRepo.UpdatePaymentInfo(ctx, nil, savedBooking.ID, snapResp.RedirectURL, snapResp.Token)
+	if err != nil {
+		return nil, err
+	}
+
+	// Update objek savedBooking biar ada payment_url & payment_tokennya
+	savedBooking.PaymentURL = snapResp.RedirectURL
+	savedBooking.PaymentToken = snapResp.Token
 
 	return savedBooking, nil
 }
