@@ -17,7 +17,7 @@ func InitMidtrans() {
 	// 1. Ambil Server Key dari env
 	serverKey := strings.TrimSpace(os.Getenv("MIDTRANS_SERVER_KEY"))
 	if serverKey == "" {
-		log.Fatal("MIDTRANS_SERVER_KEY is not set or empty. Please set the environment variable or add it to .env")
+		log.Fatal("MIDTRANS_SERVER_KEY is not set or empty")
 	}
 
 	env := strings.TrimSpace(os.Getenv("MIDTRANS_ENVIRONMENT"))

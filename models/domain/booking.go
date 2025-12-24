@@ -33,10 +33,11 @@ type Booking struct {
 }
 
 type BookingSeat struct {
-	ID        string  `gorm:"primaryKey;type:varchar(100)" json:"id"`
-	BookingID string  `gorm:"type:varchar(100);not null;index" json:"booking_id"`
-	SeatID    string  `gorm:"type:varchar(100);not null;index" json:"seat_id"`
-	Price     float64 `gorm:"type:decimal(10,2);not null" json:"price"`
+	ID         string  `gorm:"primaryKey;type:varchar(100)" json:"id"`
+	BookingID  string  `gorm:"type:varchar(100);not null;index" json:"booking_id"`
+	ShowtimeID string  `gorm:"type:varchar(100);not null;index" json:"showtime_id"` // Untuk unique constraint anti double-booking
+	SeatID     string  `gorm:"type:varchar(100);not null;index" json:"seat_id"`
+	Price      float64 `gorm:"type:decimal(10,2);not null" json:"price"`
 
 	// Relations
 	// Relasi balik ke kursi fisik (untuk tahu ini kursi nomor berapa, row apa)

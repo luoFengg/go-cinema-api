@@ -82,8 +82,9 @@ func (service *BookingServiceImpl) CreateBooking(ctx context.Context, userID str
 		// for loop untuk buat detail tiket
 		for _, seatID := range request.SeatIDs {
 			bookingSeat := domain.BookingSeat{
-				SeatID: seatID,
-				Price:  ticketPrice,
+				ShowtimeID: request.ShowtimeID, //  unique constraint anti double-booking
+				SeatID:     seatID,
+				Price:      ticketPrice,
 			}
 			newBooking.BookingSeats = append(newBooking.BookingSeats, bookingSeat)
 		}
